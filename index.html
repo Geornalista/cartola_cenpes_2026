@@ -94,6 +94,8 @@
             border: 1px solid var(--border);
         }
 
+        .card h3 { margin-top: 0; font-size: 1rem; text-align: center; color: var(--text-main); }
+
         .input-group { margin-bottom: 20px; }
         label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block; }
 
@@ -162,10 +164,10 @@
             <select id="rodadaSelect"></select>
         </div>
 
-        <div class="card"><h3>Pontuação</h3><canvas id="filtroChart"></canvas></div>
-        <div class="card"><h3>Valorização</h3><canvas id="valorizacaoChart"></canvas></div>
+        <div class="card"><h3>Pontuação na Rodada</h3><canvas id="filtroChart"></canvas></div>
+        <div class="card"><h3>Valorização na Rodada</h3><canvas id="valorizacaoChart"></canvas></div>
 
-        <h2>Frequência</h2>
+        <h2>Frequência (Total)</h2>
         <div class="card"><h3>Vitórias</h3><canvas id="vitoriasChart"></canvas></div>
         <div class="card"><h3>2º Lugares</h3><canvas id="segundosChart"></canvas></div>
         <div class="card"><h3>Lanternas</h3><canvas id="lanternasChart"></canvas></div>
@@ -173,18 +175,24 @@
         <h2>Classificação Mensal</h2>
         <div class="card">
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <select id="rodadasMensaisSelect" style="flex:1"></select>
-                <select id="mesSelect" style="flex:1">
-                    <option>Janeiro</option><option>Fevereiro</option><option>Março</option>
-                    <option>Abril</option><option>Maio</option><option>Junho</option>
-                    <option>Julho</option><option>Agosto</option><option>Setembro</option>
-                    <option>Outubro</option><option>Novembro</option><option>Dezembro</option>
-                </select>
+                <div style="flex:1">
+                    <label>RODADAS</label>
+                    <select id="rodadasMensaisSelect"></select>
+                </div>
+                <div style="flex:1">
+                    <label>MÊS</label>
+                    <select id="mesSelect">
+                        <option>Janeiro</option><option>Fevereiro</option><option>Março</option>
+                        <option>Abril</option><option>Maio</option><option>Junho</option>
+                        <option>Julho</option><option>Agosto</option><option>Setembro</option>
+                        <option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+                    </select>
+                </div>
             </div>
             <canvas id="classificacaoMensalChart"></canvas>
         </div>
 
-        <h2>Evolução</h2>
+        <h2>Evolução (Acumulado)</h2>
         <div class="card"><h3>Pontos Acumulados</h3><canvas id="cumulativeScoreChart"></canvas></div>
         <div class="card"><h3>Patrimônio (C$)</h3><canvas id="cumulativeCartoletasChart"></canvas></div>
     </div>
@@ -293,12 +301,14 @@
             const rIdx = document.getElementById('rodadaSelect').value - 1;
             const c = getChartColors();
 
+            // 1. Rodada Atual
             const pR = players.map(p => ({p, v: appData.pontos[p][rIdx]})).sort((a,b) => b.v - a.v);
             updateChart('filtroChart', getBarConfig('', pR.map(x=>x.p), pR.map(x=>x.v), '#2ecc71'));
             
             const vR = players.map(p => ({p, v: appData.valor[p][rIdx]})).sort((a,b) => b.v - a.v);
             updateChart('valorizacaoChart', getBarConfig('', vR.map(x=>x.p), vR.map(x=>x.v), '#e74c3c'));
 
+            // 2. Frequências
             let vit = {}, seg = {}, lan = {};
             players.forEach(p => vit[p] = seg[p] = lan[p] = 0);
             for (let i = 0; i < ultimaRodada; i++) {
@@ -312,6 +322,20 @@
             updateChart('segundosChart', getBarConfig('', players, players.map(p=>seg[p]), '#3498db', true));
             updateChart('lanternasChart', getBarConfig('', players, players.map(p=>lan[p]), '#e74c3c', true));
 
+            // 3. Classificação Mensal (RESTAURADO)
+            const nRodadas = parseInt(document.getElementById('rodadasMensaisSelect').value);
+            const mesSel = document.getElementById('mesSelect').value;
+            const classif = players.map(p => {
+                let total = 0;
+                const start = Math.max(0, ultimaRodada - nRodadas);
+                for (let i = start; i < ultimaRodada; i++) {
+                    total += (appData.pontos[p][i] || 0);
+                }
+                return { p, v: total };
+            }).sort((a,b) => b.v - a.v);
+            updateChart('classificacaoMensalChart', getBarConfig(`${mesSel}`, classif.map(x=>x.p), classif.map(x=>x.v), '#9b59b6'));
+
+            // 4. Evolução (Tension 0 = Linha Reta)
             const palmeirasColors = { GEORGE: '#2ecc71', XINGU: '#e74c3c', LEO: '#34495e', PAULO: '#d35400', VITOR: '#3498db', RAFAEL: '#f1c40f' };
             const lineOpt = { 
                 responsive: true, 
@@ -325,25 +349,13 @@
             const labels = Array.from({length: ultimaRodada}, (_, i) => `R${i+1}`);
             const datasetsPts = players.map(p => {
                 let sum = 0;
-                return { 
-                    label: p, 
-                    data: appData.pontos[p].map(v => sum += v), 
-                    borderColor: palmeirasColors[p], 
-                    tension: 0, // LINHA RETA (SEM SUAVIZAÇÃO)
-                    pointRadius: 3 
-                };
+                return { label: p, data: appData.pontos[p].map(v => sum += v), borderColor: palmeirasColors[p], tension: 0, pointRadius: 3 };
             });
             updateChart('cumulativeScoreChart', { type: 'line', data: { labels, datasets: datasetsPts }, options: lineOpt });
 
             const datasetsVal = players.map(p => {
                 let sum = 100;
-                return { 
-                    label: p, 
-                    data: [100, ...appData.valor[p].map(v => sum += v)], 
-                    borderColor: palmeirasColors[p], 
-                    tension: 0, // LINHA RETA (SEM SUAVIZAÇÃO)
-                    pointRadius: 3 
-                };
+                return { label: p, data: [100, ...appData.valor[p].map(v => sum += v)], borderColor: palmeirasColors[p], tension: 0, pointRadius: 3 };
             });
             updateChart('cumulativeCartoletasChart', { type: 'line', data: { labels: ['In.', ...labels], datasets: datasetsVal }, options: lineOpt });
         }
