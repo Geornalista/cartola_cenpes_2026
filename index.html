@@ -382,6 +382,11 @@
 
         document.addEventListener('DOMContentLoaded', iniciar);
 
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js').catch(e => console.error(e));
+        }
 
+        document.addEventListener('DOMContentLoaded', iniciar);
+    </script>
 </body>
 </html>
