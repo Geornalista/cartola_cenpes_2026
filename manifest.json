@@ -1,22 +1,18 @@
 {
-  "name": "Cartola Stats Dash",
-  "short_name": "CartolaStats",
-  "description": "Dashboard de estatísticas automatizado do Cartola FC",
+  "name": "Cartola FC — Análise Tática",
+  "short_name": "Cartola Tática",
+  "id": "/cartola-tatica/",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f0f2f5",
-  "theme_color": "#27ae60",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
   "orientation": "portrait",
   "icons": [
     {
       "src": "icons/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "icons/icon-512x512.png",
