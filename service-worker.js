@@ -3,7 +3,8 @@ const assets = [
   './',
   './index.html',
   './manifest.json'
-  // Adicione aqui os caminhos para seus ícones se quiser que funcionem offline
+  '.icons/icon-192x192.png'
+  '.icons/icon-512x512.png'
 ];
 
 // Instalação: Salva os arquivos essenciais no cache
