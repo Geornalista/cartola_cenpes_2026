@@ -202,6 +202,7 @@
         const players = Object.keys(timeIDs);
         let appData = { pontos: {}, valor: {} }, ultimaRodada = 0, charts = {};
 
+        // Tema Dark/Light
         const themeToggle = document.getElementById('themeToggle');
         const body = document.body;
 
@@ -223,7 +224,7 @@
             try {
                 const status = await (await fetch(`${proxy}https://api.cartola.globo.com/mercado/status`)).json();
                 ultimaRodada = status.rodada_atual - 1;
-                if (ultimaRodada <= 0) return document.getElementById('loading-container').innerHTML = "Aguardando R01.";
+                if (ultimaRodada <= 0) return document.getElementById('loading-container').innerHTML = "<p style='padding:20px'>Aguardando Rodada 01.</p>";
 
                 players.forEach(p => { appData.pontos[p] = []; appData.valor[p] = []; });
                 let patAnt = players.reduce((acc, p) => ({ ...acc, [p]: 100 }), {});
@@ -286,10 +287,22 @@
                     indexAxis: 'y', responsive: true,
                     plugins: { 
                         legend: { display: false },
-                        datalabels: { anchor: 'end', align: 'right', color: c.mainText, font: { weight: 'bold' }, formatter: v => isInt ? v : v.toFixed(1) }
+                        datalabels: { 
+                            display: true, // GARANTE QUE APAREÇA
+                            anchor: 'end', 
+                            align: 'end', 
+                            offset: 4,
+                            color: c.mainText, 
+                            font: { weight: 'bold', size: 12 }, 
+                            formatter: v => isInt ? v : v.toFixed(1) 
+                        }
                     },
                     scales: {
-                        x: { display: false, beginAtZero: true },
+                        x: { 
+                            display: false, 
+                            beginAtZero: true,
+                            grace: '15%' // ADICIONA ESPAÇO NO FINAL PARA O NÚMERO NÃO SUMIR
+                        },
                         y: { grid: { display: false }, ticks: { color: c.text, font: { size: 11, weight: '600' } } }
                     }
                 }
@@ -308,7 +321,7 @@
             const vR = players.map(p => ({p, v: appData.valor[p][rIdx]})).sort((a,b) => b.v - a.v);
             updateChart('valorizacaoChart', getBarConfig('', vR.map(x=>x.p), vR.map(x=>x.v), '#e74c3c'));
 
-            // 2. Frequências
+            // 2. Frequências (Total acumulado)
             let vit = {}, seg = {}, lan = {};
             players.forEach(p => vit[p] = seg[p] = lan[p] = 0);
             for (let i = 0; i < ultimaRodada; i++) {
@@ -318,24 +331,27 @@
                 const sVal = r.find(x => x.v < r[0].v)?.v;
                 if (sVal !== undefined) r.forEach(x => { if(x.v === sVal) seg[x.p]++; });
             }
-            updateChart('vitoriasChart', getBarConfig('', players, players.map(p=>vit[p]), '#2ecc71', true));
-            updateChart('segundosChart', getBarConfig('', players, players.map(p=>seg[p]), '#3498db', true));
-            updateChart('lanternasChart', getBarConfig('', players, players.map(p=>lan[p]), '#e74c3c', true));
+            
+            const dVit = players.map(p => ({p, v: vit[p]})).sort((a,b)=>b.v-a.v);
+            const dSeg = players.map(p => ({p, v: seg[p]})).sort((a,b)=>b.v-a.v);
+            const dLan = players.map(p => ({p, v: lan[p]})).sort((a,b)=>b.v-a.v);
 
-            // 3. Classificação Mensal (RESTAURADO)
+            updateChart('vitoriasChart', getBarConfig('', dVit.map(x=>x.p), dVit.map(x=>x.v), '#2ecc71', true));
+            updateChart('segundosChart', getBarConfig('', dSeg.map(x=>x.p), dSeg.map(x=>x.v), '#3498db', true));
+            updateChart('lanternasChart', getBarConfig('', dLan.map(x=>x.p), dLan.map(x=>x.v), '#e74c3c', true));
+
+            // 3. Classificação Mensal
             const nRodadas = parseInt(document.getElementById('rodadasMensaisSelect').value);
             const mesSel = document.getElementById('mesSelect').value;
             const classif = players.map(p => {
                 let total = 0;
                 const start = Math.max(0, ultimaRodada - nRodadas);
-                for (let i = start; i < ultimaRodada; i++) {
-                    total += (appData.pontos[p][i] || 0);
-                }
+                for (let i = start; i < ultimaRodada; i++) total += (appData.pontos[p][i] || 0);
                 return { p, v: total };
             }).sort((a,b) => b.v - a.v);
             updateChart('classificacaoMensalChart', getBarConfig(`${mesSel}`, classif.map(x=>x.p), classif.map(x=>x.v), '#9b59b6'));
 
-            // 4. Evolução (Tension 0 = Linha Reta)
+            // 4. Evolução (Linear - Tension 0)
             const palmeirasColors = { GEORGE: '#2ecc71', XINGU: '#e74c3c', LEO: '#34495e', PAULO: '#d35400', VITOR: '#3498db', RAFAEL: '#f1c40f' };
             const lineOpt = { 
                 responsive: true, 
