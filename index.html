@@ -19,7 +19,6 @@
     
     <style>
         :root {
-            /* Tema Claro (Padrão) */
             --bg: #f0f2f5;
             --card-bg: #ffffff;
             --text-main: #1a1a1a;
@@ -31,7 +30,6 @@
         }
 
         body.dark-mode {
-            /* Tema Escuro */
             --bg: #121212;
             --card-bg: #1e1e1e;
             --text-main: #e0e0e0;
@@ -196,7 +194,6 @@
         const players = Object.keys(timeIDs);
         let appData = { pontos: {}, valor: {} }, ultimaRodada = 0, charts = {};
 
-        // Lógica de Tema
         const themeToggle = document.getElementById('themeToggle');
         const body = document.body;
 
@@ -205,7 +202,7 @@
             const isDark = body.classList.contains('dark-mode');
             themeToggle.innerText = isDark ? '☀️' : '🌙';
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            renderizarGraficos(); // Redesenha para atualizar cores
+            renderizarGraficos(); 
         });
 
         if (localStorage.getItem('theme') === 'dark') {
@@ -296,14 +293,12 @@
             const rIdx = document.getElementById('rodadaSelect').value - 1;
             const c = getChartColors();
 
-            // 1. Rodada
             const pR = players.map(p => ({p, v: appData.pontos[p][rIdx]})).sort((a,b) => b.v - a.v);
             updateChart('filtroChart', getBarConfig('', pR.map(x=>x.p), pR.map(x=>x.v), '#2ecc71'));
             
             const vR = players.map(p => ({p, v: appData.valor[p][rIdx]})).sort((a,b) => b.v - a.v);
             updateChart('valorizacaoChart', getBarConfig('', vR.map(x=>x.p), vR.map(x=>x.v), '#e74c3c'));
 
-            // 2. Frequências (Vitórias, 2º, Lanterna)
             let vit = {}, seg = {}, lan = {};
             players.forEach(p => vit[p] = seg[p] = lan[p] = 0);
             for (let i = 0; i < ultimaRodada; i++) {
@@ -317,7 +312,6 @@
             updateChart('segundosChart', getBarConfig('', players, players.map(p=>seg[p]), '#3498db', true));
             updateChart('lanternasChart', getBarConfig('', players, players.map(p=>lan[p]), '#e74c3c', true));
 
-            // 3. Acumulados (Line Charts)
             const palmeirasColors = { GEORGE: '#2ecc71', XINGU: '#e74c3c', LEO: '#34495e', PAULO: '#d35400', VITOR: '#3498db', RAFAEL: '#f1c40f' };
             const lineOpt = { 
                 responsive: true, 
@@ -331,13 +325,25 @@
             const labels = Array.from({length: ultimaRodada}, (_, i) => `R${i+1}`);
             const datasetsPts = players.map(p => {
                 let sum = 0;
-                return { label: p, data: appData.pontos[p].map(v => sum += v), borderColor: palmeirasColors[p], tension: 0.3, pointRadius: 0 };
+                return { 
+                    label: p, 
+                    data: appData.pontos[p].map(v => sum += v), 
+                    borderColor: palmeirasColors[p], 
+                    tension: 0, // LINHA RETA (SEM SUAVIZAÇÃO)
+                    pointRadius: 3 
+                };
             });
             updateChart('cumulativeScoreChart', { type: 'line', data: { labels, datasets: datasetsPts }, options: lineOpt });
 
             const datasetsVal = players.map(p => {
                 let sum = 100;
-                return { label: p, data: [100, ...appData.valor[p].map(v => sum += v)], borderColor: palmeirasColors[p], tension: 0.3, pointRadius: 0 };
+                return { 
+                    label: p, 
+                    data: [100, ...appData.valor[p].map(v => sum += v)], 
+                    borderColor: palmeirasColors[p], 
+                    tension: 0, // LINHA RETA (SEM SUAVIZAÇÃO)
+                    pointRadius: 3 
+                };
             });
             updateChart('cumulativeCartoletasChart', { type: 'line', data: { labels: ['In.', ...labels], datasets: datasetsVal }, options: lineOpt });
         }
