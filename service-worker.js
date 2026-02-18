@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Minutagem';
+const CACHE_NAME = 'Cartoleiros';
 
 const ASSETS = [
   './',
