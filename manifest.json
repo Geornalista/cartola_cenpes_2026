@@ -1,7 +1,7 @@
 {
-  "name": "Cartoleiros do Cenpes",
+  "name": "Cartola Stats Dash",
   "short_name": "CartolaStats",
-  "description": "Dashboard de estatísticas automatizado do Cartola FC - 2026",
+  "description": "Dashboard de estatísticas automatizado do Cartola FC",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f0f2f5",
