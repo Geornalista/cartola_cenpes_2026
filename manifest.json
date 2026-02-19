@@ -1,7 +1,7 @@
 {
-  "name": "Cartola FC — Análise Tática",
-  "short_name": "Cartola Tática",
-  "id": "/cartola-tatica/",
+  "name": "LIGA CARTOLEIROS CENPES — 2026",
+  "short_name": "LIGA CARTOLEIROS CENPES",
+  "id": "/cartoleiros-cenpes/",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#020617",
