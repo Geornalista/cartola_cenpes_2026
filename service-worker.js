@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Cartola-v6';
+const CACHE_NAME = 'Cartola-v7';
 const assets = [
   './',
   './index.html',
